@@ -77,7 +77,8 @@ int linux_read(Network* n, unsigned char* buffer, int len, int timeout_ms)
         interval.tv_sec = 0;
         interval.tv_usec = 1000;
     }
-
+    
+    //printf("Read, timeout %d ms\n", timeout_ms);
     setsockopt(n->my_socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&interval, sizeof(struct timeval));
 
     int bytes = 0;
@@ -101,15 +102,17 @@ int linux_read(Network* n, unsigned char* buffer, int len, int timeout_ms)
 }
 
 
-int checkWaitingPacket(Network* n)
+int checkWaitingPacket(Network* n, Timer* timer)
 {
-
+    int left = left_ms(timer);
+    if (left <= 0) return 0;
+    
     fd_set readfds;
 
     FD_ZERO(&readfds);
     FD_SET(n->my_socket, &readfds);
 
-    struct timeval tv= {0, 1000};
+    struct timeval tv= {left / 1000, left % 1000 * 1000};
     if (select(n->my_socket+1, &readfds, NULL, NULL, &tv) > 0) return 1;
     else return 0;
 }
@@ -220,7 +223,7 @@ int jNetConnect(jNet *pJnet, const char *host, short nPort,
     pJnet->pNet->my_socket = ret;
     MQTTClient(pJnet->pClient, pJnet->pNet, JTIMEOUT,
                pJnet->pSendBuf, MAX_SENDBUF, pJnet->pRcvBuf, MAX_RCVBUF);
-	printf("Client done!\n");
+	//printf("Client done!\n");
     // TODO
     gMData.willFlag = 0;
     gMData.MQTTVersion = 3;
@@ -230,7 +233,7 @@ int jNetConnect(jNet *pJnet, const char *host, short nPort,
     gMData.keepAliveInterval = KEEPALIVEINTERVAL;
     gMData.cleansession = 1;
     ret = MQTTConnect(pJnet->pClient, &gMData);
-    printf("Connected %d\n", ret);
+    printf("MQTT Conn: %d\n", ret);
     if (ret < 0) close(pJnet->pNet->my_socket);
     return ret;
 }

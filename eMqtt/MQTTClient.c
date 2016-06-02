@@ -97,7 +97,7 @@ exit:
     return len;
 }
 
-extern int checkWaitingPacket(Network* n);
+extern int checkWaitingPacket(Network* n, Timer* timer);
 
 int readPacket(Client* c, Timer* timer)
 {
@@ -108,7 +108,7 @@ int readPacket(Client* c, Timer* timer)
 
 	/* 0. check whether there is an available packet to read */
 	// It is not necessary for Linux
-	// if (checkWaitingPacket(c->ipstack) == 0) return rc;
+	if (checkWaitingPacket(c->ipstack, timer) == 0) return -2;
 
     /* 1. read the header byte.  This has the packet type in it */
     rc = c->ipstack->mqttread(c->ipstack, c->readbuf, 1, left_ms(timer));
@@ -332,7 +332,7 @@ int waitfor(Client* c, int packet_type, Timer* timer)
         if (expired(timer))
             break; // we timed out
 		rc = cycle(c, timer);
-        //printf("Waitfor: %d\n", rc);
+        printf("Waitfor: %d\n", rc);
 		if (rc < 0) return rc;
     } while (rc != packet_type);
 
