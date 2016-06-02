@@ -200,6 +200,7 @@ int CreateTCPConnect(char *srv, int port)
     else
     {
 		//printf("Error connecting %d\n", error);
+        close(sockfd);
 		return error;
     }
 }
@@ -213,13 +214,13 @@ int jNetConnect(jNet *pJnet, const char *host, short nPort,
     ret = CreateTCPConnect((char *)host, nPort);
     if (ret < 0)
     {
-        //printf("No IP interface\n");
+        printf("No IP interface\n");
         return -1;	// No IP address or stack not ready
     }
     pJnet->pNet->my_socket = ret;
     MQTTClient(pJnet->pClient, pJnet->pNet, JTIMEOUT,
                pJnet->pSendBuf, MAX_SENDBUF, pJnet->pRcvBuf, MAX_RCVBUF);
-	//printf("Client done!\n");
+	printf("Client done!\n");
     // TODO
     gMData.willFlag = 0;
     gMData.MQTTVersion = 3;
@@ -229,7 +230,8 @@ int jNetConnect(jNet *pJnet, const char *host, short nPort,
     gMData.keepAliveInterval = KEEPALIVEINTERVAL;
     gMData.cleansession = 1;
     ret = MQTTConnect(pJnet->pClient, &gMData);
-    //printf("Connected %d\n", ret);
+    printf("Connected %d\n", ret);
+    if (ret < 0) close(pJnet->pNet->my_socket);
     return ret;
 }
 

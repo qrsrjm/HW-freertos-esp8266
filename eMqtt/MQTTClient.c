@@ -332,6 +332,7 @@ int waitfor(Client* c, int packet_type, Timer* timer)
         if (expired(timer))
             break; // we timed out
 		rc = cycle(c, timer);
+        //printf("Waitfor: %d\n", rc);
 		if (rc < 0) return rc;
     } while (rc != packet_type);
 
@@ -364,7 +365,7 @@ int MQTTConnect(Client* c, MQTTPacket_connectData* options)
     if ((rc = sendPacket(c, len, &connect_timer)) != SUCCESS)  // send the connect packet
         goto exit; // there was a problem
 
-	//printf("Waiting for CONNACK\n");
+	printf("Waiting for CONNACK\n");
     // this will be a blocking call, wait for the connack
     if (waitfor(c, CONNACK, &connect_timer) == CONNACK)
     {
