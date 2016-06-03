@@ -71,7 +71,7 @@ enum scStatus {
     scConSmart,
     scError
 };
-volatile enum scStatus LEDType;
+extern volatile enum scStatus LEDType;
 
 enum scWifiCon {
     DEVICE_INIT = 0,
@@ -80,6 +80,7 @@ enum scWifiCon {
     DEVICE_LOST,
     DEVICE_GOTIP
 };
+extern volatile enum scWifiCon gWifiStatus;
 //extern struct station_config s_staconf;
 
 #endif

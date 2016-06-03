@@ -17,6 +17,7 @@
 #define DEMO_PASSWORD "12345678" 
 
 volatile enum scWifiCon gWifiStatus = DEVICE_INIT;
+volatile enum scStatus LEDType = scConnecting;
 
 LOCAL xQueueHandle QueueStop = NULL;
 
@@ -228,7 +229,7 @@ ConfigDone:
     LEDType = scConDone;
     printf("Starting MQTT Client!\n");
     
-    xTaskCreate(MQTTWork, "MQTT worker", 256, NULL, 5, NULL);
+    xTaskCreate(MQTTWork, "MQTT worker", 384, NULL, 5, NULL);
     while(1)
     {
         vTaskDelay(100 / portTICK_RATE_MS);

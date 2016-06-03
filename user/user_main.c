@@ -24,11 +24,13 @@
 
 #include "esp_common.h"
 #include "driver/gpio.h"
+#include "driver/i2c_master.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
 #include "user_config.h"
+#include "peri.h"
 
 /*
 #define SENSOR_KEY_NUM    1
@@ -53,8 +55,14 @@ UserLongPress(void)
 
 void GPIOPreInit(void)
 {
-    GPIO_AS_OUTPUT(LIVEPORT);
-    GPIO_AS_INPUT(KEYPORT);
+    gpio16_output_conf();
+    
+    i2c_master_gpio_init();
+    Init7219();
+    Init8591(0x90);
+    
+    //GPIO_AS_OUTPUT(LIVEPORT);
+    //GPIO_AS_INPUT(KEYPORT);
 
 /*
     single_key[0] = key_init_single(SENSOR_KEY_IO_NUM, SENSOR_KEY_IO_MUX, SENSOR_KEY_IO_FUNC,
@@ -77,6 +85,8 @@ void IRAM_ATTR
 LEDTask(void *para)
 {
     int i = 0, d;
+    unsigned long t;
+    static long count = 0;
     while(1){
         switch(LEDType) {
         case scConnecting: // connect to AP
@@ -95,8 +105,13 @@ LEDTask(void *para)
         }
         vTaskDelay(d);
         
-        GPIO_OUTPUT(LIVEPORT, i);
+        gpio16_output_set(i);
+        //GPIO_OUTPUT(LIVEPORT, i);
         i = 1-i;
+        
+        count++;
+        t = count*100 + Read8591(0);
+        Set7219Number(t, 0x04);
     }
 }
 

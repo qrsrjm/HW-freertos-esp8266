@@ -4,6 +4,8 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 
+#include "stdlib.h"
+
 #include "lwip/sockets.h"
 
 #include "cJSON.h"
@@ -13,7 +15,7 @@
 #include "user_config.h"
 
 #define MAXFILENAME 80
-#define BUFSIZE		8000
+#define BUFSIZE		2000
 
 #define DEFAULTHOST "139.198.0.174"
 #define DEFAULTAGENT "574e61736097e903b1c5f0fb"
@@ -26,7 +28,7 @@ char gHost[MAXFILENAME+1];
 char gAgent[MAXFILENAME+1], gToken[MAXFILENAME+1];
 char gTopicUp[MAXFILENAME+1], gTopicDown[MAXFILENAME+1];
 int gPort=1883;
-volatile gUpdate = 0;
+volatile int gUpdate = 0;
 
 jNet *gJnet;
 jTimer *gTmr;
@@ -36,7 +38,7 @@ int gVari = 10;
 
 int GetRandTemp(void)
 {
-    return (int) (gMean + 2*(random() % gVari)) - gVari;
+    return (int) (gMean + 2*(rand() % gVari)) - gVari;
 }
 
 int PublishData(jNet *pJnet)
@@ -75,7 +77,7 @@ int PublishData(jNet *pJnet)
     printf("Publishing %s\n", out);
 
     res = jNetPublishT(pJnet, gTopicUp, out);
-    printf("result %d\n", res);
+    //printf("result %d\n", res);
     free(out);
     return res;
 }
@@ -91,6 +93,82 @@ void SetParas(void)
     gEInterval = gInterval;    
 }
 
+
+void UpdateInterval(int newInterval)
+{
+    int msPassed = gEInterval*1000 - jTmrLeft(gTmr);
+    printf("Timer %d: %d, passed %d ms, set to %ds\n",
+           gTmr->t_id, gEInterval, msPassed, newInterval);
+
+    if (msPassed > newInterval * 1000)
+    {
+        gUpdate = 1;
+        jTmrStart(gTmr, newInterval);
+    }
+    else jTmrStart_ms(gTmr, newInterval*1000 - msPassed);
+    gEInterval = newInterval;
+}
+
+int CheckPara(void)
+{
+    if (gInterval > 0 && gInterval < 2000)
+    {
+	//	gEInterval = gInterval;
+	}
+    else return -1;
+    return 0;
+}
+
+void AnaInterval(cJSON *item)
+{
+    cJSON *value = cJSON_GetObjectItem(item, "sec");
+    if (value != NULL && value->type == cJSON_Number)
+    {
+        int gInterval  = (int)(value->valuedouble + 0.0000001);
+        printf("Rcv: Interval: %d\n", gInterval);
+        int res = CheckPara();
+        if (res >= 0) UpdateInterval(gInterval);
+    }
+}
+
+void AnaGap(cJSON *item)
+{
+    cJSON *value = cJSON_GetObjectItem(item, "mean");
+    if (value != NULL && value->type == cJSON_Number)
+        gMean = value->valuedouble;
+    value = cJSON_GetObjectItem(item, "vari");
+    if (value != NULL && value->type == cJSON_Number)
+        gVari = (int)(value->valuedouble+0.00001);
+    if (gVari < 1) gVari = 1;
+}
+
+void CheckCmd(cJSON *root, const char *key, void (*func)(cJSON *))
+{
+    int i;
+    cJSON * cmdArray = cJSON_GetObjectItem(root, key);
+    if (cmdArray == NULL) return;
+    int count = cJSON_GetArraySize(cmdArray);
+    for (i=0; i<count; i++)
+    {
+        cJSON *item = cJSON_GetArrayItem(cmdArray, i);
+        cJSON *sub = cJSON_GetObjectItem(item, "hwid");
+        if (sub != NULL && sub->type == cJSON_String &&
+                !strcmp(gAgent, sub->valuestring))
+            func(item);
+    }
+}
+
+void ParseMsg(char *payload)
+{
+    cJSON * root = cJSON_Parse(payload);
+    if (!root) return;
+
+    CheckCmd(root, "SetInterval", AnaInterval);
+    CheckCmd(root, "SetRand", AnaGap);
+
+    if (root) cJSON_Delete(root);
+}
+
 void messageArrived(MessageData* md)
 {
     MQTTMessage* message = md->message;
@@ -101,7 +179,7 @@ void messageArrived(MessageData* md)
 
     printf("Rcvd: %s \n", payload);
 
-//    ParseMsg(payload);
+    ParseMsg(payload);
 }
 
 
@@ -116,7 +194,7 @@ void MQTTWork(void *pv)
     if (NULL == pJnet)
     {
         puts("Cannot allocate jnet resources");
-        return -1;
+        return;
     }
 
     gJnet = pJnet;
