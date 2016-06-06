@@ -33,8 +33,7 @@ volatile int gUpdate = 0;
 jNet *gJnet;
 jTimer *gTmr;
 
-double gMean = 25;
-int gVari = 10;
+int gMean = 25, gVari = 10;
 
 int GetRandTemp(void)
 {
@@ -45,7 +44,7 @@ int PublishData(jNet *pJnet)
 {
     int res;
 
-    cJSON *root, *son1, *son2, *son3;
+    cJSON *root, *son1, *son2;
     char *out;
 
     root = cJSON_CreateArray();
@@ -53,24 +52,16 @@ int PublishData(jNet *pJnet)
     cJSON_AddItemToArray(root, son1=cJSON_CreateObject());
     cJSON_AddStringToObject(son1, "hwid", gAgent);
     cJSON_AddStringToObject(son1, "type", "AGENT");
-    cJSON_AddItemToObject(son1, "values", son2=cJSON_CreateArray());
-    cJSON_AddItemToArray(son2, son3=cJSON_CreateObject());
-    cJSON_AddStringToObject(son3, "key", "temperature");
-    cJSON_AddNumberToObject(son3, "value", GetRandTemp());
-    cJSON_AddItemToArray(son2, son3=cJSON_CreateObject());
-    cJSON_AddStringToObject(son3, "key", "error");
-    cJSON_AddFalseToObject(son3, "value");
+    cJSON_AddItemToObject(son1, "values", son2=cJSON_CreateObject());
+    cJSON_AddNumberToObject(son2, "temperature", GetRandTemp());
+    cJSON_AddFalseToObject(son2, "error");
 
     cJSON_AddItemToArray(root, son1=cJSON_CreateObject());
     cJSON_AddStringToObject(son1, "hwid", "ABCDEF0123456");
     cJSON_AddStringToObject(son1, "type", "SENSOR");
-    cJSON_AddItemToObject(son1, "values", son2=cJSON_CreateArray());
-    cJSON_AddItemToArray(son2, son3=cJSON_CreateObject());
-    cJSON_AddStringToObject(son3, "key", "temperature");
-    cJSON_AddNumberToObject(son3, "value", 25);
-    cJSON_AddItemToArray(son2, son3=cJSON_CreateObject());
-    cJSON_AddStringToObject(son3, "key", "humidity");
-    cJSON_AddNumberToObject(son3, "value", 55);
+    cJSON_AddItemToObject(son1, "values", son2=cJSON_CreateObject());
+    cJSON_AddNumberToObject(son2, "temperature", 25);
+    cJSON_AddNumberToObject(son2, "humidity", 55);
 
     out=cJSON_PrintUnformatted(root);
     cJSON_Delete(root);
@@ -119,6 +110,17 @@ int CheckPara(void)
     return 0;
 }
 
+void AnaDisplay(cJSON *item)
+{
+    cJSON *value = cJSON_GetObjectItem(item, "data");
+    if (value != NULL && value->type == cJSON_Number)
+    {
+        int data  = (int)(value->valuedouble + 0.0000001);
+        printf("Rcv: Display: %d\n", data);
+        if (data >= 0 && data < 100) gDis2 = data;   
+    }    
+}
+
 void AnaInterval(cJSON *item)
 {
     cJSON *value = cJSON_GetObjectItem(item, "sec");
@@ -135,15 +137,30 @@ void AnaGap(cJSON *item)
 {
     cJSON *value = cJSON_GetObjectItem(item, "mean");
     if (value != NULL && value->type == cJSON_Number)
-        gMean = value->valuedouble;
+        gMean = (int)(value->valuedouble);
     value = cJSON_GetObjectItem(item, "vari");
     if (value != NULL && value->type == cJSON_Number)
         gVari = (int)(value->valuedouble+0.00001);
     if (gVari < 1) gVari = 1;
+    printf("TempGen set: %d + (%d)\n", gMean, gVari);
 }
 
 void CheckCmd(cJSON *root, const char *key, void (*func)(cJSON *))
 {
+    cJSON *item;
+
+    cJSON * cmdArray = cJSON_GetObjectItem(root, key);
+    if (cmdArray == NULL) return;
+        
+    cJSON_ArrayForEach(item, cmdArray)
+    {
+        cJSON *sub = cJSON_GetObjectItem(item, "hwid");
+        if (sub != NULL && sub->type == cJSON_String &&
+                !strcmp(gAgent, sub->valuestring))
+            func(item);        
+    }
+}
+/*    
     int i;
     cJSON * cmdArray = cJSON_GetObjectItem(root, key);
     if (cmdArray == NULL) return;
@@ -157,6 +174,7 @@ void CheckCmd(cJSON *root, const char *key, void (*func)(cJSON *))
             func(item);
     }
 }
+*/
 
 void ParseMsg(char *payload)
 {
@@ -165,6 +183,7 @@ void ParseMsg(char *payload)
 
     CheckCmd(root, "SetInterval", AnaInterval);
     CheckCmd(root, "SetRand", AnaGap);
+    CheckCmd(root, "SetDisplay", AnaDisplay);
 
     if (root) cJSON_Delete(root);
 }

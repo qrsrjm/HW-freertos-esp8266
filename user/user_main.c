@@ -52,6 +52,7 @@ UserLongPress(void)
     system_restart();
 }
 */
+volatile int gDis2 = 0;
 
 void GPIOPreInit(void)
 {
@@ -60,6 +61,7 @@ void GPIOPreInit(void)
     i2c_master_gpio_init();
     Init7219();
     Init8591(0x90);
+    gDis2 = 0;
     
     //GPIO_AS_OUTPUT(LIVEPORT);
     //GPIO_AS_INPUT(KEYPORT);
@@ -110,7 +112,7 @@ LEDTask(void *para)
         i = 1-i;
         
         count++;
-        t = count*100 + Read8591(0);
+        t = count*100 + ((gDis2 != 0) ?gDis2 : Read8591(0));
         Set7219Number(t, 0x04);
     }
 }

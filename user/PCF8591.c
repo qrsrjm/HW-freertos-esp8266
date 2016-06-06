@@ -38,6 +38,7 @@ int Init8591(int i2cAddr)
 {
     s8591Addr = i2cAddr & 0xfffe;
     int ret = Set8591Ch(0);
+    printf("Init8591: %d\n", ret);
     i2c_master_stop();
     return ret;    
 }
@@ -62,6 +63,7 @@ unsigned short Read8591(int no)
     return t;
        
 Fail:
+    printf("Read8591 Failed\n");
     i2c_master_stop();
     return 0xffff;    
 }

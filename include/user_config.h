@@ -82,6 +82,7 @@ enum scWifiCon {
 };
 extern volatile enum scWifiCon gWifiStatus;
 //extern struct station_config s_staconf;
+extern volatile int gDis2;
 
 #endif
 
