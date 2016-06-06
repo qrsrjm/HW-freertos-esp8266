@@ -24,6 +24,7 @@
 
 #include "esp_common.h"
 #include "driver/gpio.h"
+#include "driver/key.h"
 #include "driver/i2c_master.h"
 
 #include "freertos/FreeRTOS.h"
@@ -33,12 +34,6 @@
 #include "peri.h"
 
 /*
-#define SENSOR_KEY_NUM    1
-
-#define SENSOR_KEY_IO_MUX     PERIPHS_IO_MUX_MTCK_U
-#define SENSOR_KEY_IO_NUM     13
-#define SENSOR_KEY_IO_FUNC    FUNC_GPIO13
-
 
 LOCAL volatile scStatus LEDType = 0;
 LOCAL struct keys_param keys;
@@ -52,10 +47,33 @@ UserLongPress(void)
     system_restart();
 }
 */
+
+
 volatile int gDis2 = 0;
+LOCAL struct keys_param keys;
+LOCAL struct single_key_param *single_key[1];
+
+LOCAL void
+FlashKeyShortPress(void)
+{
+    printf("Flash pressed\n");    
+}
+
+LOCAL void 
+FlashKeyLongPress(void)
+{
+    system_restore();
+    system_restart();
+}
 
 void GPIOPreInit(void)
 {
+    single_key[0] = key_init_single(0, PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0, 
+                                    FlashKeyLongPress, FlashKeyShortPress);
+    keys.key_num = 1;
+    keys.single_key = single_key;
+    key_init(&keys);
+        
     gpio16_output_conf();
     
     i2c_master_gpio_init();
@@ -63,24 +81,6 @@ void GPIOPreInit(void)
     Init8591(0x90);
     gDis2 = 0;
     
-    //GPIO_AS_OUTPUT(LIVEPORT);
-    //GPIO_AS_INPUT(KEYPORT);
-
-/*
-    single_key[0] = key_init_single(SENSOR_KEY_IO_NUM, SENSOR_KEY_IO_MUX, SENSOR_KEY_IO_FUNC,
-                                    UserLongPress, NULL);
-
-    keys.key_num = SENSOR_KEY_NUM;
-    keys.single_key = single_key;
-
-    key_init(&keys);
-
-    if (GPIO_INPUT_GET(GPIO_ID_PIN(SENSOR_KEY_IO_NUM)) == 0)
-        UserLongPress();
-*/
-    
-    //PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO4_U, FUNC_GPIO4);
-    //GPIO_OUTPUT_SET(GPIO_IN_PIN(4), 1);
 }
 
 void IRAM_ATTR 
