@@ -29,6 +29,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/queue.h"
 
 #include "user_config.h"
 #include "peri.h"
@@ -52,10 +53,14 @@ UserLongPress(void)
 volatile int gDis2 = 0;
 LOCAL struct keys_param keys;
 LOCAL struct single_key_param *single_key[1];
+extern xQueueHandle QueueStop;
+extern int gEInterval;
 
 LOCAL void
 FlashKeyShortPress(void)
 {
+    static short d10 = 1;
+    xQueueSendToBack(QueueStop, &d10, 0);
     printf("Flash pressed\n");    
 }
 
@@ -87,25 +92,30 @@ void IRAM_ATTR
 LEDTask(void *para)
 {
     int i = 0, d;
+    short d10;
     unsigned long t;
-    static long count = 0;
+    static long count = 0, lc = 0;
     while(1){
         switch(LEDType) {
         case scConnecting: // connect to AP
             d = 200 / portTICK_RATE_MS;
+            d10 = 2;
             break;
         case scConDone: // AP connected
             d = 500 / portTICK_RATE_MS;
+            d10 = 5;
             break;
         case scConSmart: // Station
-            if (i) d = 100 / portTICK_RATE_MS;
-            else d = 500 / portTICK_RATE_MS;
+            if (i) { d = 100 / portTICK_RATE_MS; d10 = 1; }
+            else { d = 500 / portTICK_RATE_MS; d10 = 5; }
             break;
         default: 
+            d10 = 1;
             d = 80 / portTICK_RATE_MS;
             break;   
         }
         vTaskDelay(d);
+        lc += d10;
         
         gpio16_output_set(i);
         //GPIO_OUTPUT(LIVEPORT, i);
@@ -114,6 +124,12 @@ LEDTask(void *para)
         count++;
         t = count*100 + ((gDis2 != 0) ?gDis2 : Read8591(0));
         Set7219Number(t, 0x04);
+        
+        if (lc >= 10 * gEInterval && QueueStop != NULL)
+        {
+            lc = 0;
+            xQueueSendToBack(QueueStop, &lc, 0);
+        }
     }
 }
 

@@ -19,7 +19,7 @@
 volatile enum scWifiCon gWifiStatus = DEVICE_INIT;
 volatile enum scStatus LEDType = scConnecting;
 
-LOCAL xQueueHandle QueueStop = NULL;
+xQueueHandle QueueStop = NULL;
 
 void wifi_event_cb(System_Event_t *evt)
 {
@@ -239,7 +239,7 @@ ConfigDone:
 
 void  InitDaemon(void)
 {
-    if (QueueStop == NULL)  QueueStop = xQueueCreate(1,1);
+    if (QueueStop == NULL)  QueueStop = xQueueCreate(1, 2);
 
     if (QueueStop != NULL){
         xTaskCreate(WifiDaemon, "Wifi Daemon", 256, NULL, 5, NULL);

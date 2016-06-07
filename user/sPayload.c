@@ -23,15 +23,15 @@
 
 extern int jNetSubscribeT(jNet *, const char *, enum QoS, messageHandler);
 
-int gInterval=300, gEInterval, gFinish=0;
+int gEInterval=300, gFinish=0;
 char gHost[MAXFILENAME+1];
 char gAgent[MAXFILENAME+1], gToken[MAXFILENAME+1];
 char gTopicUp[MAXFILENAME+1], gTopicDown[MAXFILENAME+1];
 int gPort=1883;
 volatile int gUpdate = 0;
+extern xQueueHandle QueueStop;
 
 jNet *gJnet;
-jTimer *gTmr;
 
 int gMean = 25, gVari = 10;
 
@@ -40,7 +40,7 @@ int GetRandTemp(void)
     return (int) (gMean + 2*(rand() % gVari)) - gVari;
 }
 
-int PublishData(jNet *pJnet)
+int PublishData(jNet *pJnet, int source)
 {
     int res;
 
@@ -54,7 +54,9 @@ int PublishData(jNet *pJnet)
     cJSON_AddStringToObject(son1, "type", "AGENT");
     cJSON_AddItemToObject(son1, "values", son2=cJSON_CreateObject());
     cJSON_AddNumberToObject(son2, "temperature", GetRandTemp());
-    cJSON_AddFalseToObject(son2, "error");
+    if (source == 0)  cJSON_AddFalseToObject(son2, "error");
+    else cJSON_AddTrueToObject(son2, "error");
+
 
     cJSON_AddItemToArray(root, son1=cJSON_CreateObject());
     cJSON_AddStringToObject(son1, "hwid", "ABCDEF0123456");
@@ -81,34 +83,16 @@ void SetParas(void)
         
     sprintf(gTopicDown, "power/agents/%s/downstream", gAgent);
     sprintf(gTopicUp, "power/agents/%s/upstream", gAgent);
-    gEInterval = gInterval;    
 }
 
 
 void UpdateInterval(int newInterval)
 {
-    int msPassed = gEInterval*1000 - jTmrLeft(gTmr);
-    printf("Timer %d: %d, passed %d ms, set to %ds\n",
-           gTmr->t_id, gEInterval, msPassed, newInterval);
-
-    if (msPassed > newInterval * 1000)
-    {
-        gUpdate = 1;
-        jTmrStart(gTmr, newInterval);
+    if (newInterval > 0 && newInterval < 3000) {
+        gEInterval = newInterval;
     }
-    else jTmrStart_ms(gTmr, newInterval*1000 - msPassed);
-    gEInterval = newInterval;
 }
 
-int CheckPara(void)
-{
-    if (gInterval > 0 && gInterval < 2000)
-    {
-	//	gEInterval = gInterval;
-	}
-    else return -1;
-    return 0;
-}
 
 void AnaDisplay(cJSON *item)
 {
@@ -126,10 +110,9 @@ void AnaInterval(cJSON *item)
     cJSON *value = cJSON_GetObjectItem(item, "sec");
     if (value != NULL && value->type == cJSON_Number)
     {
-        int gInterval  = (int)(value->valuedouble + 0.0000001);
-        printf("Rcv: Interval: %d\n", gInterval);
-        int res = CheckPara();
-        if (res >= 0) UpdateInterval(gInterval);
+        int interval  = (int)(value->valuedouble + 0.0000001);
+        printf("Rcv: Interval: %d\n", interval);
+        UpdateInterval(interval);
     }
 }
 
@@ -160,21 +143,6 @@ void CheckCmd(cJSON *root, const char *key, void (*func)(cJSON *))
             func(item);        
     }
 }
-/*    
-    int i;
-    cJSON * cmdArray = cJSON_GetObjectItem(root, key);
-    if (cmdArray == NULL) return;
-    int count = cJSON_GetArraySize(cmdArray);
-    for (i=0; i<count; i++)
-    {
-        cJSON *item = cJSON_GetArrayItem(cmdArray, i);
-        cJSON *sub = cJSON_GetObjectItem(item, "hwid");
-        if (sub != NULL && sub->type == cJSON_String &&
-                !strcmp(gAgent, sub->valuestring))
-            func(item);
-    }
-}
-*/
 
 void ParseMsg(char *payload)
 {
@@ -205,7 +173,6 @@ void messageArrived(MessageData* md)
 void MQTTWork(void *pv)
 {
     int rc, delayS = 1;
-    jTimer	tmrInt;
     
     SetParas();
     
@@ -217,7 +184,6 @@ void MQTTWork(void *pv)
     }
 
     gJnet = pJnet;
-    gTmr = &tmrInt;
     
     while(!gFinish)
     {
@@ -245,16 +211,14 @@ void MQTTWork(void *pv)
 		if (rc != 0) goto clean;
 
         /* Initial publish */
-        if (PublishData(pJnet) != 0) goto clean;
-        jTmrStart(&tmrInt, gEInterval);
+        if (PublishData(pJnet, 0) != 0) goto clean;
         do
         {
-            if (jTmrExpired(&tmrInt) || gUpdate)
+            short ret;
+            if (xQueueReceive(QueueStop, &ret, 1) == pdPASS)
             {
-                /* Publish new data every gPubInterval seconds */
-                if (PublishData(pJnet) != 0) goto clean;
-                gUpdate = 0;
-                jTmrStart(&tmrInt, gEInterval);
+                printf("Queue %d\n", ret);
+                if (PublishData(pJnet, ret)) goto clean;
             }
             /* Make jNet library do background tasks */
             rc = jNetYield(pJnet);
