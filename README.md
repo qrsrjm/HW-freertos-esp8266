@@ -30,6 +30,7 @@
             - *状态显示*，多至8个LED
 - 硬件MQTT连接服务的参数配置：
     - J1ST.IO平台系统的参数（在`sPayload.c`中定义）
+
         | Section | Value |
         |--------|--------|
         | DEFAULTHOST | Use `"139.198.0.174"`, which is provided by J1ST.IO |
