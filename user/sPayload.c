@@ -13,6 +13,7 @@
 #include "MQTTClient.h"
 
 #include "user_config.h"
+#include "peri.h"
 
 #define MAXFILENAME 80
 #define BUFSIZE		2000
@@ -57,13 +58,12 @@ int PublishData(jNet *pJnet, int source)
     if (source == 0)  cJSON_AddFalseToObject(son2, "error");
     else cJSON_AddTrueToObject(son2, "error");
 
-
     cJSON_AddItemToArray(root, son1=cJSON_CreateObject());
     cJSON_AddStringToObject(son1, "hwid", "ABCDEF0123456");
     cJSON_AddStringToObject(son1, "type", "SENSOR");
     cJSON_AddItemToObject(son1, "values", son2=cJSON_CreateObject());
-    cJSON_AddNumberToObject(son2, "temperature", 25);
-    cJSON_AddNumberToObject(son2, "humidity", 55);
+    cJSON_AddNumberToObject(son2, "lumen", Read8591(0));
+    cJSON_AddNumberToObject(son2, "Volt", Read8591(3));
 
     out=cJSON_PrintUnformatted(root);
     cJSON_Delete(root);
