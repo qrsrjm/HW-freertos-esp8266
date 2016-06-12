@@ -1,4 +1,4 @@
-# **J1ST.IO Demo for FreeRTOS(ESP8266) in C ** #
+# *J1ST.IO Demo for FreeRTOS(ESP8266) in C * #
 
 ### 基于FreeRTOS的J1ST.IO演示程序
 - 样例基于 [*ZE_FreeRTOS_SDK 1.0.0*](https://github.com/zenin-tech/HW.RaspberryPi.git)运行在FreeRTOS上
@@ -30,7 +30,7 @@
             - *状态显示*，多至8个LED
 - 硬件MQTT连接服务的参数配置：
     - J1ST.IO平台系统的参数（在`sPayload.c`中定义）
-		| Section | Value |
+        | Section | Value |
         |--------|--------|
         | DEFAULTHOST | Use `"139.198.0.174"`, which is provided by J1ST.IO |
         | gPort | Use `1883`, which is provided by J1ST.IO
