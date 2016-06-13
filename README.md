@@ -256,21 +256,4 @@ vi sPayload.c
     
     ```json
     {
-        "SetInterval":
-        [{
-            "hwid":"570c63096097e943626e1142",
-            "sec":300
-        }]
-    }
-    ```
-- WebHook：
-
-### 手机APP端配合Demo程序联合使用
-- Dev页面设置player APP实现
-- profile查看
-- chart查看
-- Fn实现
-
-
-
-
+        "SetInter
