@@ -41,11 +41,11 @@
     - 符合J1ST.IO规范的`PUBLISH`和`SUBSCRIBE`主题生成（在`sPayload.c`文件`SetParas()`函数中生成）
 
         ```
-            PUBLISH:  power/agents/{agentId}/upstream
+            PUBLISH:  agents/{agentId}/upstream
         ```
 
         ```
-            SUBSCRIBE:  power/agents/{agentId}/downstream
+            SUBSCRIBE:  agents/{agentId}/downstream
         ```
 
 - SDK的API，详细文档[在此](https://github.com/zenin-tech/HW.FreeRToS.SDK/wiki)：
@@ -90,9 +90,9 @@
 | -------------- | -------------- |
 | Developer Wiki       | https://github.com/zenin-tech/HW.FreeRTOS_SDK/wiki |
 | API docs             | [ZE_Liunx_SDK api](https://github.com/zenin-tech/ZW_FreeRTOS_SDK/wiki) |
-| Docs                 | [J1ST.IO docs(TODO)](https://github.com/zenin-tech/HW.ESP8266/wiki) |
+| Docs                 | [J1ST.IO docs(TODO)](https://github.com/zenin-tech/HW-freertos-esp8266/wiki) |
 | Home                 | [J1ST.IO(Home)](http://j1st.io/) |
-| Developer Console    | [J1ST.IO(Developer)](http://139.198.0.174:3000/) |
+| Developer Console    | [J1ST.IO(Developer)](http://developer.j1st.io/) |
 
 # 库说明
 表格*Description*中所描述的功能请查看[概要]()。
@@ -152,7 +152,7 @@
 在乐鑫系统缺省配置下，在FreeRTOS SDK的app目录下，创建一个工作目录用来存放下载的Demo源码
 
 ```
-git clone https://github.com/zenin-tech/HW.ESP8266.git
+git clone https://github.com/zenin-tech/HW-freertos-esp8266.git
 ```
 
 ## Get hardware connection permission
@@ -163,7 +163,7 @@ git clone https://github.com/zenin-tech/HW.ESP8266.git
 - Linux系统下修改HW.ESP8266文件夹下的`sPayload.c`中硬件连接许可的参数配置，按照提示替换成属于您的`agentId` `agentToken`
 
 ```
-cd HW.ESP8266/user/
+cd HW-freertos-esp8266/user/
 vi sPayload.c
 ```
 
@@ -178,7 +178,7 @@ vi sPayload.c
 *注：`agentId` `agentToken`必须同时使用，在相同的时间仅能提供给一台硬件设备运行。*
 
 ## 编译和烧写
-- 按照乐鑫的手册，进入app/HW.ESP8266目录下，执行`./gen_misc.sh`以生成相关的二进制映像文件。
+- 按照乐鑫的手册，进入app/HW-freertos-esp8266目录下，执行`./gen_misc.sh`以生成相关的二进制映像文件。
 - 将上述生成的映像文件通过乐鑫提供的FLASH DOWNLOAD TOOL下载到NODEMCU中，具体操作方式请参见乐鑫的文档。
 - 重新启动NODEMCU，可以看见相关LED以5Hz的频率快闪，同时计数值在迅速增加，表明设备处于配置状态。
 - 在8位数码LED上，前6位是计数值，后两位是当前的光强（0-255，实际显示最后两位）
@@ -196,7 +196,7 @@ vi sPayload.c
     - upstream topic
 
     ```
-    power/agents/570c63096097e943626e1142/upstream
+    agents/570c63096097e943626e1142/upstream
     ```
 
     - upstream payload
@@ -226,7 +226,7 @@ vi sPayload.c
     - downstream topic
 
     ```
-    power/agents/570c63096097e943626e1142/downstream
+    agents/570c63096097e943626e1142/downstream
     ```
 
     - downstream payload
