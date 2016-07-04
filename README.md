@@ -33,8 +33,8 @@
 
         | Section | Value |
         |--------|--------|
-        | DEFAULTHOST | Use `"139.198.0.174"`, which is provided by J1ST.IO |
-        | gPort | Use `1883`, which is provided by J1ST.IO
+        | DEFAULTHOST | Use `"developer.j1st.io"`, which is provided by J1ST.IO |
+        | gPort | Use `8883`, which is provided by J1ST.IO
         | DEFAULTAGENT | Use `agentId`, which is provided by J1ST.IO |
         | DEFAULTTOKEN | Use `agentToken`, which is provided by J1ST.IO |
 
@@ -105,6 +105,7 @@
 | user/         | Application and module source |
 | driver/       | ESP8266外围接口的库文件 |
 | eMqtt/        | MQTT协议库文件 |
+| SSLPatch/     | Replace corresponding files under free-rtos-sdk |
 
 ### 8266 Demo user目录下文件简单说明
 
@@ -168,7 +169,7 @@ vi sPayload.c
 ```
 
 ```
-#define DEFAULTHOST "139.198.0.174"
+#define DEFAULTHOST "developer.j1st.io"
 #define DEFAULTAGENT "574beaf36097e967b84370c9"      //Replace here of agentId
 #define DEFAULTTOKEN "TqPGtNVacEjMfNQMYnzMQrMpcRtXjOuZ"   //Replace here of agentToken
 ```
@@ -269,3 +270,16 @@ vi sPayload.c
 - chart查看
 - Fn实现
 
+### Note for SSL
+- Use jNetSInit to create an SSL environment instead of jNetInit for non-secure sys
+- Make sure the port is 8883 for Mqtt on SSL
+- Nothing more
+
+### Note for certificate verification
+- Does not check validity of full cert chains as we cannot / do not want to store all root certificates so self-signed certificate is allowed
+- The integrity of the first certificate is checked.
+- The DN can be checked by programmers in jVerifyCert
+- It is strongly suggested that we check the fingerprint of the server otherwise the SSL is non-helpful
+
+### Bugs (?)
+- Memory leakage on connection broken?
