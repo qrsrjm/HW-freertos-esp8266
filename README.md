@@ -1,7 +1,7 @@
 # *J1ST.IO Demo for FreeRTOS(ESP8266) in C * #
 
 ### 基于FreeRTOS的J1ST.IO演示程序
-- 样例基于 [*ZE_FreeRTOS_SDK 1.0.0*](https://github.com/zenin-tech/HW.RaspberryPi.git)运行在FreeRTOS上
+- 样例基于 [*ZE_FreeRTOS_SDK 1.0.0*](https://github.com/zenin-tech/HW.RaspberryPi)运行在FreeRTOS上
 - 硬件设备：NodeMCU
 - 硬件模块：PCF8591模块、MAX7219模块、GPIO模块
 - GCC编译器：gcc 4.8.2 for xtensa-lx106
@@ -9,7 +9,7 @@
 - 在模块的初始阶段，还需要一台iPhone或Android手机以配置系统
 
 # 概要
-*J1ST.IO Demo for FreeRTOS(ESP8266)* 旨在能让用户在运行FreeRTOS的NodeMCU系统（基于ESP8266芯片）上快速实现J1ST.IO的基本操作功能，并配合[Developer Console](http://139.198.0.174:3000/)控制台来实现属于自己的IoT产品。若您未使用过我们的产品，请先阅读[J1ST.IO入门(TODO)]()。
+*J1ST.IO Demo for FreeRTOS(ESP8266)* 旨在能让用户在运行FreeRTOS的NodeMCU系统（基于ESP8266芯片）上快速实现J1ST.IO的基本操作功能，并配合[Developer Console](http://developer.j1st.io/)控制台来实现属于自己的IoT产品。若您未使用过我们的产品，请先阅读[J1ST.IO入门(TODO)]()。
 
 - *J1ST.IO Demo for FreeRTOS(ESP8266) in C* 提供的操作：
     - WiFi操作功能（由乐鑫的ESP8266 RTOS SDK提供）
@@ -89,7 +89,7 @@
 | Resource | Location |
 | -------------- | -------------- |
 | Developer Wiki       | https://github.com/zenin-tech/HW.FreeRTOS_SDK/wiki |
-| API docs             | [ZE_Liunx_SDK api](https://github.com/zenin-tech/ZW_FreeRTOS_SDK/wiki) |
+| API docs             | [ZE_Liunx_SDK api](https://github.com/zenin-tech/ZE_FreeRTOS_SDK/wiki) |
 | Docs                 | [J1ST.IO docs(TODO)](https://github.com/zenin-tech/HW-freertos-esp8266/wiki) |
 | Home                 | [J1ST.IO(Home)](http://j1st.io/) |
 | Developer Console    | [J1ST.IO(Developer)](http://developer.j1st.io/) |
