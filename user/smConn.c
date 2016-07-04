@@ -229,7 +229,7 @@ ConfigDone:
     LEDType = scConDone;
     printf("Starting MQTT Client!\n");
     
-    xTaskCreate(MQTTWork, "MQTT worker", 384, NULL, 5, NULL);
+    xTaskCreate(MQTTWork, "MQTT worker", 1024, NULL, 5, NULL);
     while(1)
     {
         vTaskDelay(100 / portTICK_RATE_MS);

@@ -12,6 +12,11 @@ typedef struct Network Network;
 struct Network
 {
     int my_socket;
+	struct _SSL_CTX *sslctx;	// SSL flag
+	struct _SSL *ssl;
+	const char *finger;
+	int remainbytes;	// TODO: Uninitialized
+	unsigned char *localbuf;
     int (*mqttread) (Network*, unsigned char*, int, int);
     int (*mqttwrite) (Network*, unsigned char*, int, int);
     void (*disconnect) (Network*);
@@ -30,6 +35,8 @@ int linux_write(Network*, unsigned char*, int, int);
 //void linux_disconnect(jNet*);
 
 extern jNet *jNetInit(void);
+extern jNet *jNetSInit(const unsigned char *finger);
+
 extern void jNetFree(jNet *);
 
 extern int jNetConnect(jNet *pJnet, const char *host, short nPort,
@@ -39,6 +46,8 @@ extern int jNetDisconnect(jNet *pJnet);
 extern int jNetYield(jNet *pJnet);
 
 extern int jNetPublishT(jNet *pJnet, const char *topic, char *payload);
+
+extern int jVerifyCert(struct _SSL *ssl, const char *host, const char *finger);
 
 
 typedef struct jTimer jTimer;
