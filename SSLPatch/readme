@@ -1,9 +1,10 @@
-Some modifications is mode to SSL library which espressif adopts.
+Some modifications is made to SSL library which espressif adopts.
 
 1. Add ssl_readB, a non-blocked version of ssl_read
 2. Add fingerprint support for SSL server
 3. Modify certificate verification criteria for embedded systems
 
 Update corresponding files in ESP_SDK with patchs, and re-build ssl libary 
-with $ ./make_lib.sh ssl in directory of third_party
+with $ ./make_lib.sh ssl in the directory of third_party
 
+Such work should be done first!
