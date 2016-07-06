@@ -155,6 +155,7 @@
 ```
 git clone https://github.com/zenin-tech/HW-freertos-esp8266.git
 ```
+请下载dev分支来获取对SSL的支持！
 
 ## Get hardware connection permission
 
@@ -177,6 +178,9 @@ vi sPayload.c
 - 替换后按`[Esc]`退出编辑并输入`:wq`保存退出。
 
 *注：`agentId` `agentToken`必须同时使用，在相同的时间仅能提供给一台硬件设备运行。*
+
+## Patch
+进入SSLPatch目录，根据目录下Readme文件的内容修改乐鑫FreeRToS库中SSL的相关文件。
 
 ## 编译和烧写
 - 按照乐鑫的手册，进入app/HW-freertos-esp8266目录下，执行`./gen_misc.sh`以生成相关的二进制映像文件。
@@ -270,12 +274,12 @@ vi sPayload.c
 - chart查看
 - Fn实现
 
-### Note for SSL
+### Notes for SSL
 - Use jNetSInit to create an SSL environment instead of jNetInit for non-secure sys
 - Make sure the port is 8883 for Mqtt on SSL
 - Nothing more
 
-### Note for certificate verification
+### Notes for certificate verification
 - Does not check validity of full cert chains as we cannot / do not want to store all root certificates so self-signed certificate is allowed
 - The integrity of the first certificate is checked.
 - The DN can be checked by programmers in jVerifyCert
