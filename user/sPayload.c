@@ -19,8 +19,17 @@
 #define BUFSIZE		2000
 
 #define DEFAULTHOST "139.198.0.174"
-#define DEFAULTAGENT "574e61736097e903b1c5f0fb"
-#define DEFAULTTOKEN "sOoOoKAiPrRVEggwstnMCbINFdezjFmP"
+#define DEFAULTAGENT "577629356097e9531f70d423"
+#define DEFAULTTOKEN "msTbMJMcMzahgullxwjwBImhzpyozasR"
+
+const uint8_t *gFinger = 
+"\x9e\xde\x5b\x30\xa4\x99\x21\xd9\x26\x8b\x42\x63\x52\x05\xc0\xd2\xc9\x33\x30\x8a";
+
+//#define DEFAULTHOST "developer.j1st.io"
+//#define DEFAULTAGENT "57746a65280c4765c40c4691"
+//#define DEFAULTTOKEN "tzwFgJnwDzHVhMMvMsEudOnmVfnBlrjt"
+
+int gPort=8883;
 
 extern int jNetSubscribeT(jNet *, const char *, enum QoS, messageHandler);
 
@@ -28,7 +37,6 @@ int gEInterval=300, gFinish=0;
 char gHost[MAXFILENAME+1];
 char gAgent[MAXFILENAME+1], gToken[MAXFILENAME+1];
 char gTopicUp[MAXFILENAME+1], gTopicDown[MAXFILENAME+1];
-int gPort=1883;
 volatile int gUpdate = 0;
 extern xQueueHandle QueueStop;
 
@@ -81,8 +89,8 @@ void SetParas(void)
     strcpy(gAgent, DEFAULTAGENT);
     strcpy(gToken, DEFAULTTOKEN);
         
-    sprintf(gTopicDown, "power/agents/%s/downstream", gAgent);
-    sprintf(gTopicUp, "power/agents/%s/upstream", gAgent);
+    sprintf(gTopicDown, "agents/%s/downstream", gAgent);
+    sprintf(gTopicUp, "agents/%s/upstream", gAgent);
 }
 
 
@@ -173,10 +181,11 @@ void messageArrived(MessageData* md)
 void MQTTWork(void *pv)
 {
     int rc, delayS = 1;
-    
+
     SetParas();
-    
-    jNet * pJnet = jNetInit();
+
+    jNet * pJnet = jNetSInit(gFinger);
+//    jNet * pJnet = jNetInit();
     if (NULL == pJnet)
     {
         puts("Cannot allocate jnet resources");
@@ -193,7 +202,7 @@ void MQTTWork(void *pv)
             continue;
         }
         rc = jNetConnect(pJnet, gHost, gPort, gAgent, gToken);
-        if (rc < 0)
+        if (rc != 0)
         {
             printf("Cannot connect %s: %d, Waiting for %d seconds and retry\n", gHost, rc, delayS);
             vTaskDelay(delayS * 1000 / portTICK_RATE_MS);
@@ -210,7 +219,7 @@ void MQTTWork(void *pv)
 
 		if (rc != 0) goto clean;
 
-        /* Initial publish */
+        // Initial publish
         if (PublishData(pJnet, 0) != 0) goto clean;
         do
         {
@@ -220,13 +229,13 @@ void MQTTWork(void *pv)
                 printf("Queue %d\n", ret);
                 if (PublishData(pJnet, ret)) goto clean;
             }
-            /* Make jNet library do background tasks */
+            // Make jNet library do background tasks 
             rc = jNetYield(pJnet);
             //printf("Yield %d\n", rc);
             if (rc < 0) break;
         }  while (!gFinish);
         printf("Stopping\n");
-        /* Cleanup */
+        // Cleanup 
 	clean:
         jNetDisconnect(pJnet);
     }
